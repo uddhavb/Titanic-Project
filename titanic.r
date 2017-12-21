@@ -48,7 +48,7 @@ plot(density(full$Age[!is.na(full$Age)]))
 with_age = subset(full, !is.na(Age))
 without_age = subset(full, is.na(Age))
 
-ageMLR = lm(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Title, data = with_age)
+ageMLR = lm(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Title + family, data = with_age)
 temp = predict(ageMLR, full)
 
 for(i in 1:1309)
@@ -74,33 +74,41 @@ full$Parch = range01(full$Parch)
 full$Fare = range01(full$Fare)
 full$family = range01(full$family)
 
-##now separate to predict
-train <- full[1:891,]
-test <- full[892:1309,]
-train$Survived = (train$Survived ==1)
-test$Survived = (test$Survived ==1)
-
-model = svm(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title, data=train, type = 'C')#, cost = 100, gamma = 100)
-#model = svm(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + family,family=binomial(link='logit'), data=train)
-train_pred = predict(model, train)
-#train_pred = train_pred >= 0.5
-
-count =0
-for(i in 1:891)
+##prediction using k-fold(10-fold) validation
+accuracy = c()
+for(i in 1:10)
 {
-  if(train_pred[i] == train$Survived[i])
-    count = count + 1
+  ##now separate to predict
+  train= rbind(full[1:((i*130) -1),],full[((i+1)*130):1309,])
+  test = full[(i*130):((i+1)*130 -1),]
+  
+  train$Survived = (train$Survived ==1)
+  test$Survived = (test$Survived ==1)
+  
+  model = svm(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + family, data=train, type = 'C')#, cost = 100, gamma = 100)
+  #model = svm(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Title + family,family=binomial(link='logit'), data=train)
+  train_pred = predict(model, train)
+  #train_pred = train_pred >= 0.5
+  
+  count =0
+  for(j in 1:1179)
+  {
+    if(train_pred[j] == train$Survived[j])
+      count = count + 1
+  }
+  count/1179
+  
+  ######
+  ##  predict on test data
+  test_pred = predict(model, test)
+  #train_pred = train_pred >= 0.5
+  count =0
+  for(j in 1:130)
+  {
+    if(test_pred[j] == test$Survived[j])
+      count = count + 1
+  }
+  accuracy[i] = count/130
 }
-count/891
-
-######
-##  predict on test data
-test_pred = predict(model, test)
-#train_pred = train_pred >= 0.5
-count =0
-for(i in 1:418)
-{
-  if(test_pred[i] == test$Survived[i])
-    count = count + 1
-}
-count/418
+accuracy
+paste("The accuracy of the model is: ",mean(accuracy))
