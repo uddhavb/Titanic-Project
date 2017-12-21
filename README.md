@@ -12,5 +12,6 @@ Scale the numeric attributes to be between 0 and 1 so that no particular attribu
    
 ## Prediction   
 Fit the training data into a model using Support Vector Machines(SVM). Test the fiited model on the testing data and check the accuracy of the model.   
-The model's accuracy on the testing data is found to be 94.49%    
-
+    
+## K-fold Validation   
+The model is checked for its accuracy by a 10-fold validation wherein the data set is divided into training and testing data in a 9:1 ratio respectively 10 times. Every time a separate set is taken for testing. The accuracies for all the tests are calcualted and the mean is taken to get the accuracy of the model. It is found to be 86.83%   
